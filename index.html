@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FLEX-WAM — block-causal world–action models for long-horizon imagination and planning</title>
+  <meta name="description" content="FLEX-WAM is one block-causal world–action model to act, simulate, imagine and plan: a single checkpoint runs as an interactive simulator or a real-time state–action streamer, stays stable over thousands of steps, and solves long-horizon tasks entirely in imagination.">
+  <meta property="og:title" content="FLEX-WAM">
+  <meta property="og:description" content="One block-causal world–action model to act, simulate, imagine and plan.">
+  <meta property="og:image" content="static/videos/long_rollouts.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="static/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='6' y='14' width='16' height='36' rx='4' fill='%2357068c'/%3E%3Crect x='26' y='14' width='16' height='36' rx='4' fill='%2357068c' opacity='.6'/%3E%3Crect x='46' y='14' width='12' height='36' rx='4' fill='%23e8811e'/%3E%3C/svg%3E">
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="logos">
+      <img src="static/images/creo_logo.svg" alt="CREO, Center for Robotics and Embodied Intelligence, New York University" class="logo-creo">
+    </div>
+    <h1 class="wordmark">FLEX-WAM</h1>
+    <p class="paper-title">Flexible Block-Causal World–Action Models for Long-Horizon Imagination and Planning</p>
+    <p class="authors">
+      <span>Rooholla Khorrambakht</span><sup>1*</sup>,
+      <span>Joseph Amigo</span><sup>1*</sup>,
+      <span>Félix Lebel</span><sup>1</sup>,
+      <span>Leon Seetoo</span><sup>1</sup>,
+      <span>Jean Ponce</span><sup>2,3</sup>,
+      <span>Zhenzhen Li</span><sup>4</sup>,
+      <span>Ludovic Righetti</span><sup>1,5</sup>
+    </p>
+    <p class="affiliations">
+      <span><sup>1</sup>Center for Robotics and Embodied Intelligence (CREO), New York University</span>
+      <span><sup>2</sup>Courant Institute of Mathematical Sciences and Center for Data Science, New York University</span>
+      <span><sup>3</sup>École normale supérieure – PSL</span>
+      <span><sup>4</sup>NVIDIA</span>
+      <span><sup>5</sup>Artificial and Natural Intelligence Toulouse Institute (ANITI)</span>
+    </p>
+    <p class="note"><sup>*</sup>Equal contribution</p>
+    <nav class="actions" aria-label="Paper resources">
+      <!-- DEMO-PARKED (R, 2026-11-04): live demo is a later feature. Restore with the #play section and demo.js below.
+      <a class="btn" href="#play">Demo</a>
+      -->
+      <a class="btn" href="https://arxiv.org/pdf/2610.05483">Paper</a>
+      <span class="btn btn-quiet btn-soon">Code: Coming Soon!</span>
+      <a class="btn btn-quiet" href="#citation">Cite</a>
+    </nav>
+  </div>
+  <figure class="media wide hero-video">
+    <video autoplay muted loop playsinline preload="auto" poster="static/videos/long_rollouts.jpg">
+      <source src="static/videos/long_rollouts.mp4" type="video/mp4">
+    </video>
+    <figcaption>Seeded with a few real frames, FLEX-WAM generates states and actions on its own for many steps, with no real frames after the seed: real PushT play, a bimanual OpenArm, a Unitree G1 humanoid with dexterous hands, and simulated OGBench tasks.</figcaption>
+  </figure>
+</header>
+
+<main>
+  <section class="wrap lede">
+    <h2>TL;DR</h2>
+    <p>FLEX-WAM is <span class="key">one block-causal world–action model to act, simulate, imagine and plan</span>. A single checkpoint runs as an interactive simulator or a real-time state–action streamer, stays stable over thousands of steps, and solves long-horizon tasks entirely in imagination.</p>
+  </section>
+
+  <!-- DEMO-PARKED (R, 2026-11-04): the live player needs a public backend (see README). Uncomment to restore.
+  <section class="wrap" id="play">
+    <h2>Drive It, or Let It Drive</h2>
+    <p>With the same checkpoint, FLEX-WAM works both as an <span class="mode-wm">interactive simulator (WM)</span> and <span class="mode-wam">real-time state-action streamer (WAM)</span>, while staying stable over thousands of steps.</p>
+    <p>Press play to start from a real PushT frame. In <span class="mode-wm">World Model</span> mode (You Drive), the arrow keys control the robot. In <span class="mode-wam">World Action Model</span> mode (click Model Drives), it generates the actions and the frames jointly and plays with the T endlessly. Press an arrow at any time to take control back.</p>
+
+    <div class="player" id="player" tabindex="0" data-api="" aria-label="Live FLEX-WAM PushT demo. Arrow keys drive, M hands control to the model, R starts from a new real frame, Space pauses.">
+      <div class="screen" id="screen" data-kind="idle">
+        <img src="static/images/demo_poster.png" alt="" id="poster">
+        <canvas id="view" width="512" height="512" hidden></canvas>
+        <span class="tag" id="tag">Real PushT frame</span>
+        <div class="veil" id="veil">
+          <button type="button" class="btn" id="start">Play</button>
+          <small id="veil-note">Runs live on a GPU in our lab</small>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="modes" role="group" aria-label="Who drives">
+          <button type="button" class="mode" data-mode="wm" aria-pressed="true">You Drive<span>World Model</span></button>
+          <button type="button" class="mode" data-mode="joint" aria-pressed="false">Model Drives<span>World Action Model</span></button>
+        </div>
+        <div class="counter" aria-live="off">
+          <div class="k">Frames since the last real frame</div>
+          <div class="n" id="dream">0</div>
+          <div class="k" id="dreamt">0.0 s of imagined time</div>
+        </div>
+        <div class="dial"><canvas id="dial" width="144" height="144" aria-hidden="true"></canvas><span>Current action<br><span id="lat">&nbsp;</span></span></div>
+        <div class="pad" aria-label="Direction pad">
+          <button type="button" data-dir="up" aria-label="Up">↑</button>
+          <button type="button" data-dir="left" aria-label="Left">←</button>
+          <button type="button" data-dir="down" aria-label="Down">↓</button>
+          <button type="button" data-dir="right" aria-label="Right">→</button>
+        </div>
+        <p class="keys"><kbd>←</kbd> <kbd>↑</kbd> <kbd>↓</kbd> <kbd>→</kbd> drive &nbsp;·&nbsp; <kbd>M</kbd> model drives<br><kbd>R</kbd> new start &nbsp;·&nbsp; <kbd>Space</kbd> pause</p>
+        <div class="row">
+          <button type="button" class="btn btn-quiet" id="reset" disabled>New start</button>
+          <button type="button" class="btn btn-quiet" id="pause" disabled>Pause</button>
+        </div>
+        <div class="status" id="status"><span class="dot"></span><span id="status-text">Checking the demo server…</span></div>
+      </div>
+    </div>
+  </section>
+  -->
+
+  <section class="wrap" id="method">
+    <h2>One Block-Causal Model for States and Actions</h2>
+    <div class="beats">
+      <div class="beat"><h3>Compact, Axial</h3><p>Each camera frame is compressed into a few latent tokens, and an axial transformer attends over space and time in separate layers, keeping long sequences cheap.</p></div>
+      <div class="beat"><h3>Two Noise Levels per Frame</h3><p>Every frame carries its state and its action, each with its own noise level, so one model can be a policy, a simulator, or both at once.</p></div>
+      <div class="beat"><h3>Block-Causal</h3><p>Attention is bidirectional within a block and causal across blocks, so the model streams with a KV cache, and the block size, chosen at deployment, trades latency for throughput.</p></div>
+    </div>
+    <figure class="media wide">
+      <img class="plain" src="static/images/wam_overview.png" alt="FLEX-WAM overview: tokenizer, axial attention, the per-frame token set of the dynamics model, and the block-causal attention mask" loading="lazy">
+      <figcaption>(a) The tokenizer encodes every camera view into one shared set of latents per frame, and is trained to reconstruct masked patches. (b) Both networks hold their tokens on a frame × token grid and attend along one axis per layer. (c) The dynamics model denoises one 263-token set per frame (latents, registers, the two noise levels, and the action) into clean latents and action velocities. (d) Its attention in time is block-causal: a frame attends to its own block in both directions and to every earlier block, never to a later one.</figcaption>
+    </figure>
+    <figure class="media" style="max-width: 30rem">
+      <img class="plain" src="static/images/computetime_vs_blocksize.png" alt="Block-generation rate and frame throughput as the inference block size grows" loading="lazy">
+      <figcaption>Block-generation rate and effective frame throughput as the inference block size varies. All block sizes use the same checkpoint; a larger block trades causal latency for frame throughput.</figcaption>
+    </figure>
+  </section>
+
+
+  <section class="wrap" id="robot">
+    <h2>A Real-Time Policy That Knows What to Expect</h2>
+    <p>On a bimanual OpenArm-based robot, FLEX-WAM runs as a <span class="key">10 Hz closed-loop policy</span>. Each wrist-camera frame is committed to the KV cache, grounding the model in reality at little cost, and the next action is predicted and executed. The <strong>same checkpoint predicts the expected outcome</strong> of each action, so mismatches between the model and reality can be spotted, and collected, while the robot runs.</p>
+    <figure class="media wide">
+      <video muted loop playsinline preload="none" poster="static/videos/openarm_policy.jpg" data-autoplay-visible><source src="static/videos/openarm_policy.mp4" type="video/mp4"></video>
+      <figcaption>Trained on an intentionally short two-hour teleoperated play dataset, wrist camera only. The video pauses three times, the robot does not, to show futures the model imagines from that moment. 1.75× speed.</figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap" id="planning">
+    <h2>Planning Entirely in Imagination</h2>
+    <p>Because it both proposes actions and predicts their outcomes, FLEX-WAM plugs directly into <span class="key">Monte Carlo tree search</span>, where every branch is an imagined rollout.</p>
+    <figure class="media wide">
+      <img class="plain" src="static/images/plan_tree_pusht.png" alt="An MCTS search tree in FLEX-WAM's imagination with the returned plan highlighted, next to the decoded imagined states along the plan" loading="lazy">
+      <figcaption>Left, the search tree: node colours are task rewards (light to dark), hollow rings are children created but never simulated, and the highlighted path is the returned plan. Right, the decoded imagined states along the plan.</figcaption>
+    </figure>
+    <figure class="media wide">
+      <video muted loop playsinline preload="none" poster="static/videos/pusht_plans.jpg" data-autoplay-visible><source src="static/videos/pusht_plans.mp4" type="video/mp4"></video>
+      <figcaption>PushT on real-robot play data: bring the T to the centre, upright. Plans are found entirely in imagination and are not executed; the inset shows the final imagined state.</figcaption>
+    </figure>
+    <figure class="media wide">
+      <video muted loop playsinline preload="none" poster="static/videos/puzzle_plans.jpg" data-autoplay-visible><source src="static/videos/puzzle_plans.mp4" type="video/mp4"></video>
+      <figcaption>OGBench Puzzle-4×4, a lights-out board with 2<sup>16</sup> states: each press flips a button and its neighbours, so goals take four to seven presses through boards that look further from the goal. Tree search in imagination solves all five tasks, 80 of 100 episodes. 1.5× speed.</figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap" id="video">
+    <h2>The Three-Minute Version</h2>
+    <figure class="media wide">
+      <video controls playsinline preload="none" poster="static/videos/flexwam_video.jpg"><source src="static/videos/flexwam_video.mp4" type="video/mp4"></video>
+    </figure>
+  </section>
+
+  <section class="wrap" id="code">
+    <h2>Code and Models</h2>
+    <p>We will release the code, the checkpoints of every model in the paper, and this PushT demo, so it runs on your own GPU.</p>
+  </section>
+
+  <section class="wrap" id="citation">
+    <h2>Citation</h2>
+    <button type="button" class="copy" data-copy="#bibtex">Copy BibTeX</button>
+<pre id="bibtex"><code>@article{khorrambakht2026flex,
+  title={FLEX-WAM: Flexible Block-Causal World-Action Models for Long-Horizon Imagination and Planning},
+  author={Khorrambakht, R and Amigo, Joseph and Lebel, F{\'e}lix and Seetoo, Leon and Ponce, Jean and Li, Zhenzhen and Righetti, Ludovic},
+  journal={arXiv preprint arXiv:2610.05483},
+  year={2026}
+}</code></pre>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p>Center for Robotics and Embodied Intelligence (CREO), New York University.</p>
+</footer>
+
+<script defer src="static/js/main.js"></script>
+<!-- DEMO-PARKED (R, 2026-11-04): <script defer src="static/js/demo.js"></script> -->
+</body>
+</html>
